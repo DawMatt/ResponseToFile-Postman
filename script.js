@@ -19,8 +19,17 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.get('/', (req, res) => res.send('Hello, I write data to file. Send them requests!'));
 
 app.post('/write', (req, res) => {
-  let extension = req.body.fileExtension || defaultFileExtension,
-    filePath = `${path.join(folderPath, req.body.requestName)}.${extension}`;
+  // Allow for request specific sub-folders to be created
+  let requestFolderPath = folderPath;
+  if (req.body.subFolder != null) {
+    requestFolderPath = `${path.join(folderPath, req.body.subFolder)}`;
+
+    // Create the folder path in case it doesn't exist
+    shell.mkdir('-p', requestFolderPath);
+  };
+
+  let extension = req.body.fileExtension || defaultFileExtension;
+  let filePath = `${path.join(requestFolderPath, req.body.requestName)}.${extension}`;
 
   fs.writeFile(filePath, req.body.responseData, (err) => {
     if (err) {
